@@ -35,7 +35,7 @@ setup(
     name='fortifyapi',
     packages=['fortifyapi'],
     version=version,
-    description='Python library enumerating the Fortify Software Security Center (SSC) RESTFul API',
+    description='Python library for Fortify Software Security Center (SSC) RESTFul API',
     long_description=readme,
     author='Brandon Spruth, Jim Nelson',
     author_email='brandon.spruth2@target.com, jim.nelson2@target.com',

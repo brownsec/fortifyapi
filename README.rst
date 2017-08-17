@@ -1,7 +1,7 @@
 Fortify API
 ***********
 
-Fortify API is an `SSC <https://saas.hpe.com/en-us/software/software-security-assurance-sdlc/>`_ SAST artifact and administration library interfacing with the RESTFul API.
+Fortify API is a Python RESTFul API client module for Fortify's `Software Security Center <https://saas.hpe.com/en-us/software/software-security-assurance-sdlc/>`_
 
 Quick Start
 ~~~~~~~~~~~
