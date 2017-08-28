@@ -6,13 +6,16 @@ __contributors__ = ["Brandon Spruth", "Jim Nelson"]
 __status__ = "Production"
 __license__ = "MIT"
 
+try:
+    import urllib2 as urllib
+except ImportError: #Pyhton3
+    import urllib
 import json
 import ntpath
 import requests
 import requests.auth
 import requests.exceptions
 import requests.packages.urllib3
-import urllib2
 from . import __version__ as version
 
 
@@ -214,7 +217,7 @@ class FortifyApi(object):
         :return: A response object containing the result of the get
         """
         if search_expression:
-            url = '/ssc/api/v1/attributeDefinitions?q=' + urllib2.quote(str(search_expression))
+            url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.parse.quote(str(search_expression))
             return self._request('GET', url)
         else:
             return FortifyResponse(message='A search expression must be provided', success=False)
