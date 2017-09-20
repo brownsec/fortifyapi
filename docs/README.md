@@ -114,7 +114,7 @@ Create a new project version under the specified project
 
 - - -
 
-### Create Project Version:
+### Create New Project and Version:
 Create a new project and new version under that project
 
 #### Parameters
