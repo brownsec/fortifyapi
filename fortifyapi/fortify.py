@@ -215,9 +215,11 @@ class FortifyApi(object):
         """
         if search_expression:
             try:
-                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.parse.quote(str(search_expression))
+                # Python 2
+                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.quote(str(search_expression))
             except:
-                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.pathname2url(str(search_expression))
+                # Python 3
+                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.parse.quote(str(search_expression))
             return self._request('GET', url)
         else:
             return FortifyResponse(message='A search expression must be provided', success=False)
