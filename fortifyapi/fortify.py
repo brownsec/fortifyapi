@@ -2,14 +2,11 @@
 
 __author__ = "Brandon Spruth (brandon.spruth2@target.com), Jim Nelson (jim.nelson2@target.com)"
 __copyright__ = "(C) 2017 Target Brands, Inc."
-__contributors__ = ["Brandon Spruth", "Jim Nelson"]
+__contributors__ = ["Brandon Spruth", "Jim Nelson", "Matthew Dunaj"]
 __status__ = "Production"
 __license__ = "MIT"
 
-try:
-    import urllib2 as urllib
-except ImportError: #Pyhton3
-    import urllib
+import urllib
 import json
 import ntpath
 import requests
@@ -120,7 +117,9 @@ class FortifyApi(object):
         :return: A response object containing the created project version
         """
         issue_template = self.get_issue_template(project_template_id=project_template)
-        issue_template_id = issue_template.data['data'][0]['id']
+        issue_template_id = issue_template.data['data'][0]['_href']
+        # SSC API returns the full url for the issue template, strip away just the ID
+        issue_template_id = issue_template_id.rsplit('/', 1)[1]
         data = json.dumps(self.__formatted_application_version_payload__(project_name=project_name,
                                                                          project_id=project_id,
                                                                          version_name=version_name,
@@ -140,7 +139,6 @@ class FortifyApi(object):
                     f.write(file_content)
             else:
                 print response.message
-
         We've coded this for the entire file to load into memory. A future change may be to permit
         streaming/chunking of the file and handing back a stream instead of content.
         :param artifact_id: the id of the artifact to download
@@ -177,7 +175,6 @@ class FortifyApi(object):
                     f.write(file_content)
             else:
                 print response.message
-
         We've coded this for the entire file to load into memory. A future change may be to permit
         streaming/chunking of the file and handing back a stream instead of content.
         :param artifact_id: the id of the artifact scan to download
@@ -217,7 +214,12 @@ class FortifyApi(object):
         :return: A response object containing the result of the get
         """
         if search_expression:
-            url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.parse.quote(str(search_expression))
+            try:
+                # Python 2
+                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.quote(str(search_expression))
+            except:
+                # Python 3
+                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.parse.quote(str(search_expression))
             return self._request('GET', url)
         else:
             return FortifyResponse(message='A search expression must be provided', success=False)
@@ -259,7 +261,7 @@ class FortifyApi(object):
         :return: A response object with data containing issue templates for the supplied project name
         """
 
-        url = "/ssc/api/v1/issueTemplates" + "?q=id:\"" + project_template_id + "\""
+        url = "/ssc/api/v1/issueTemplates" + "?limit=1&fields=q=id:\"" + project_template_id + "\""
         return self._request('GET', url)
 
     def get_project_version_artifacts(self, parent_id):
