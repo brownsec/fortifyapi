@@ -72,6 +72,31 @@ class FortifyApi(object):
 
         return json_application_version
 
+    @staticmethod
+    def __formatted_new_application_version_payload__(project_name, version_name, issue_template_id,
+                                                  description):
+        """
+        :param project_name: Project name
+        :param version_name: Version name
+        :param issue_template_id: Issue template ID
+        :param description: Project version description
+        :return:
+        """
+        json_application_version = dict(name='', description='', active=True, committed=True, issueTemplateId='',
+                                        project={
+                                            'name': '',
+                                            'description': '',
+                                            'issueTemplateId': ''
+                                        })
+
+        json_application_version['project']['issueTemplateId'] = issue_template_id
+        json_application_version['project']['name'] = project_name
+        json_application_version['issueTemplateId'] = issue_template_id
+        json_application_version['name'] = version_name
+        json_application_version['description'] = description
+
+        return json_application_version
+
     def add_project_version_attribute(self, project_version_id, attribute_definition_id, value,
                                       values, guid=None):
         """
@@ -128,6 +153,25 @@ class FortifyApi(object):
         url = '/ssc/api/v1/projectVersions'
         return self._request('POST', url, data=data)
 
+    def create_new_project_version(self, project_name, project_template, version_name, description):
+        """
+        :param project_name: Project name
+        :param project_template: Project template
+        :param version_name: Version name
+        :param description: Description of project version
+        :return: A response object containing the newly created project and project version
+        """
+        issue_template = self.get_issue_template(project_template_id=project_template)
+        issue_template_id = issue_template.data['data'][0]['_href']
+        # SSC API returns the full url for the issue template, strip away just the ID
+        issue_template_id = issue_template_id.rsplit('/', 1)[1]
+        data = json.dumps(self.__formatted_new_application_version_payload__(project_name=project_name,
+                                                                         version_name=version_name,
+                                                                         issue_template_id=issue_template_id,
+                                                                         description=description))
+        url = '/ssc/api/v1/projectVersions'
+        return self._request('POST', url, data=data)
+
     def download_artifact(self, artifact_id):
         """
         You might use this method like this, for example
@@ -139,6 +183,7 @@ class FortifyApi(object):
                     f.write(file_content)
             else:
                 print response.message
+
         We've coded this for the entire file to load into memory. A future change may be to permit
         streaming/chunking of the file and handing back a stream instead of content.
         :param artifact_id: the id of the artifact to download
@@ -175,6 +220,7 @@ class FortifyApi(object):
                     f.write(file_content)
             else:
                 print response.message
+
         We've coded this for the entire file to load into memory. A future change may be to permit
         streaming/chunking of the file and handing back a stream instead of content.
         :param artifact_id: the id of the artifact scan to download
