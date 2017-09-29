@@ -277,6 +277,20 @@ class FortifyApi(object):
         url = '/ssc/api/v1/attributeDefinitions?start=-1&limit=-1'
         return self._request('GET', url)
 
+    def get_cloudscan_jobs(self):
+        """
+        :return: A response object containing all cloudscan jobs
+        """
+        url = '/ssc/api/v1/cloudjobs?start=-1&limit=-1'
+        return self._request('GET', url)
+
+    def get_cloudscan_job_status(self, scan_id):
+        """
+        :return: A response object containing a cloudscan job
+        """
+        url = '/ssc/api/v1/cloudjobs/' + scan_id
+        return self._request('GET', url)
+
     def get_file_token(self, purpose):
         """
         :param purpose: specify if the token is for file 'UPLOAD' or 'DOWNLOAD'
