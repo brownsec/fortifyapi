@@ -1,3 +1,10 @@
+.. image:: https://img.shields.io/pypi/v/fortifyapi.svg
+   :target: https://pypi.org/project/fortifyapi
+.. image:: https://img.shields.io/pypi/pyversions/fortifyapi.svg
+.. image:: https://img.shields.io/pypi/dm/fortifyapi.svg
+.. image:: https://img.shields.io/travis/jaraco/fortifyapi/master.svg
+   :target: http://travis-ci.org/target/fortifyapi
+   
 Fortify API
 ***********
 
@@ -37,6 +44,6 @@ Found something that doesn't seem right or have a feature request? Please open a
 
 Copyright and License
 ~~~~~~~~~~~~~~~~~~~~~
+.. image:: https://img.shields.io/github/license/target/fortifyapi.svg?style=flat-square
 
 - Copyright 2017 Target Brands, Inc.
-- `Licensed under MIT <https://github.com/target/fortifyapi/blob/master/LICENSE.txt/>`__.
