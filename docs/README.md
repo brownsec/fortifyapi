@@ -10,6 +10,7 @@ The fortify-api module contains a class that wraps the Fortify RESTful calls in 
 [Methods](#methods)
 - [add project version attribute: `add_project_version_attribute`](#add-project-version-attribute)
 - [create project version: `create_project_version`](#create-project-version)
+- [create new project and version: `create_new_project_version`](#create-new_project-version)
 - [download artifact: `download_artifact`](#download-artifact)
 - [download artifact scan: `download_artifact_scan`](#download-artifact-scan)
 - [get artifact scans: `get_artifact_scans`](#get-artifact-scans)
@@ -100,7 +101,7 @@ Convenience function to set the 'committed' project version attribute to True
 #### Parameters
 *project_version_id:*</br>
 
-- - - 
+- - -
 
 ### Create Project Version:
 Create a new project version under the specified project
@@ -108,6 +109,16 @@ Create a new project version under the specified project
 #### Parameters
 *project_name*</br>
 *param project_id*</br>
+*param project_template*</br>
+*param version_name*</br>
+
+- - -
+
+### Create New Project and Version:
+Create a new project and new version under that project
+
+#### Parameters
+*project_name*</br>
 *param project_template*</br>
 *param version_name*</br>
 
@@ -197,7 +208,7 @@ Get all artifacts for the specified project version.
 #### Parameters
 *parent_id* the id of the project version
 
-- - - 
+- - -
 
 ### Get Project Version Attributes
 Get all attributes for the specified project version.
@@ -205,7 +216,7 @@ Get all attributes for the specified project version.
 #### Parameters
 *project_version_id* the id of the project version
 
-- - - 
+- - -
 
 ### Get Project Versions
 Get all project versions
@@ -213,7 +224,7 @@ Get all project versions
 #### Parameters
 none <br>
 
-- - - 
+- - -
 
 ### Get Projects
 Get all projects
@@ -221,7 +232,7 @@ Get all projects
 #### Parameters
 none <br>
 
-- - - 
+- - -
 
 ### Get Token
 Get auth token for use in subsequent API calls
@@ -230,7 +241,7 @@ Get auth token for use in subsequent API calls
 *token_type*(optional)<br>
 *ttl*
 
-- - - 
+- - -
 
 ### Post Attribute Definition
 Post the provided attribute definition
@@ -238,7 +249,7 @@ Post the provided attribute definition
 #### Parameters
 *attribute_definition*
 
-- - - 
+- - -
 
 ### Upload Artifact Scan
 Upload the provided scan to the project version
@@ -247,4 +258,4 @@ Upload the provided scan to the project version
 *file_path* Full path to the file to upload
 *project_version_id* Project version id for the project version to which the scan should be uploaded
 
-- - - 
+- - -

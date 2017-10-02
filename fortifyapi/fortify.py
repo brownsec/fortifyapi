@@ -3,14 +3,11 @@
 
 __author__ = "Brandon Spruth (brandon.spruth2@target.com), Jim Nelson (jim.nelson2@target.com)"
 __copyright__ = "(C) 2017 Target Brands, Inc."
-__contributors__ = ["Brandon Spruth", "Jim Nelson"]
+__contributors__ = ["Brandon Spruth", "Jim Nelson", "Matthew Dunaj"]
 __status__ = "Production"
 __license__ = "MIT"
 
-try:
-    import urllib2 as urllib
-except ImportError: #Pyhton3
-    import urllib
+import urllib
 import json
 import ntpath
 import requests
@@ -76,6 +73,31 @@ class FortifyApi(object):
 
         return json_application_version
 
+    @staticmethod
+    def __formatted_new_application_version_payload__(project_name, version_name, issue_template_id,
+                                                  description):
+        """
+        :param project_name: Project name
+        :param version_name: Version name
+        :param issue_template_id: Issue template ID
+        :param description: Project version description
+        :return:
+        """
+        json_application_version = dict(name='', description='', active=True, committed=True, issueTemplateId='',
+                                        project={
+                                            'name': '',
+                                            'description': '',
+                                            'issueTemplateId': ''
+                                        })
+
+        json_application_version['project']['issueTemplateId'] = issue_template_id
+        json_application_version['project']['name'] = project_name
+        json_application_version['issueTemplateId'] = issue_template_id
+        json_application_version['name'] = version_name
+        json_application_version['description'] = description
+
+        return json_application_version
+
     def add_project_version_attribute(self, project_version_id, attribute_definition_id, value,
                                       values, guid=None):
         """
@@ -121,9 +143,30 @@ class FortifyApi(object):
         :return: A response object containing the created project version
         """
         issue_template = self.get_issue_template(project_template_id=project_template)
-        issue_template_id = issue_template.data['data'][0]['id']
+        issue_template_id = issue_template.data['data'][0]['_href']
+        # SSC API returns the full url for the issue template, strip away just the ID
+        issue_template_id = issue_template_id.rsplit('/', 1)[1]
         data = json.dumps(self.__formatted_application_version_payload__(project_name=project_name,
                                                                          project_id=project_id,
+                                                                         version_name=version_name,
+                                                                         issue_template_id=issue_template_id,
+                                                                         description=description))
+        url = '/ssc/api/v1/projectVersions'
+        return self._request('POST', url, data=data)
+
+    def create_new_project_version(self, project_name, project_template, version_name, description):
+        """
+        :param project_name: Project name
+        :param project_template: Project template
+        :param version_name: Version name
+        :param description: Description of project version
+        :return: A response object containing the newly created project and project version
+        """
+        issue_template = self.get_issue_template(project_template_id=project_template)
+        issue_template_id = issue_template.data['data'][0]['_href']
+        # SSC API returns the full url for the issue template, strip away just the ID
+        issue_template_id = issue_template_id.rsplit('/', 1)[1]
+        data = json.dumps(self.__formatted_new_application_version_payload__(project_name=project_name,
                                                                          version_name=version_name,
                                                                          issue_template_id=issue_template_id,
                                                                          description=description))
@@ -218,7 +261,12 @@ class FortifyApi(object):
         :return: A response object containing the result of the get
         """
         if search_expression:
-            url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.parse.quote(str(search_expression))
+            try:
+                # Python 2
+                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.quote(str(search_expression))
+            except:
+                # Python 3
+                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.parse.quote(str(search_expression))
             return self._request('GET', url)
         else:
             return FortifyResponse(message='A search expression must be provided', success=False)
@@ -260,7 +308,7 @@ class FortifyApi(object):
         :return: A response object with data containing issue templates for the supplied project name
         """
 
-        url = "/ssc/api/v1/issueTemplates" + "?q=id:\"" + project_template_id + "\""
+        url = "/ssc/api/v1/issueTemplates" + "?limit=1&fields=q=id:\"" + project_template_id + "\""
         return self._request('GET', url)
 
     def get_project_version_artifacts(self, parent_id):
