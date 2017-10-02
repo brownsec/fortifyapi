@@ -1,7 +1,6 @@
 .. image:: https://img.shields.io/pypi/v/fortifyapi.svg
    :target: https://pypi.org/project/fortifyapi
 .. image:: https://img.shields.io/pypi/pyversions/fortifyapi.svg
-.. image:: https://img.shields.io/pypi/dm/fortifyapi.svg
 .. image:: https://img.shields.io/travis/jaraco/fortifyapi/master.svg
    :target: http://travis-ci.org/target/fortifyapi
    
