@@ -329,6 +329,14 @@ class FortifyApi(object):
 
         url = "/ssc/upload/resultFileUpload.html?mat=" + file_token
 
+        #test ntpath handling for codecs
+        print("isabs => {}".format(ntpath.isabs(file_path)))
+        print("dirname => {}".format(ntpath.dirname(file_path)))
+        print("basename => {}".format(ntpath.basename(file_path)))
+        print("normpath => {}".format(ntpath.normpath(file_path)))
+        print("split => {}".format(ntpath.split(file_path)))
+        print("join=> {}".format(ntpath.join(file_path, "TEST!!")))
+
         files = {'file': (ntpath.basename(file_path), open(file_path), 'rb')}
 
         headers = {
