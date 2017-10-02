@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 __author__ = "Brandon Spruth (brandon.spruth2@target.com), Jim Nelson (jim.nelson2@target.com)"
 __copyright__ = "(C) 2017 Target Brands, Inc."
@@ -387,9 +388,7 @@ class FortifyApi(object):
         :return: Response from the file upload operation
         """
         file_token = self.get_file_token('UPLOAD').data['data']['token']
-
         url = "/ssc/upload/resultFileUpload.html?mat=" + file_token
-
         files = {'file': (ntpath.basename(file_path), open(file_path), 'rb')}
 
         headers = {
