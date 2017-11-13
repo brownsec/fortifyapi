@@ -389,7 +389,7 @@ class FortifyApi(object):
         """
         file_token = self.get_file_token('UPLOAD').data['data']['token']
         url = "/ssc/upload/resultFileUpload.html?mat=" + file_token
-        files = {'file': (ntpath.basename(file_path), open(file_path), 'rb')}
+        files = {'file': (ntpath.basename(file_path), open(file_path, 'rb'))}
 
         headers = {
             'Accept': 'Accept:application/xml, text/xml, */*; q=0.01',
