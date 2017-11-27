@@ -8,6 +8,7 @@ __status__ = "Production"
 __license__ = "MIT"
 
 import urllib
+import urllib3
 import json
 import ntpath
 import requests
@@ -35,7 +36,10 @@ class FortifyApi(object):
             self.user_agent = user_agent
 
         if not self.verify_ssl:
-            requests.packages.urllib3.disable_warnings()
+            try:
+                requests.packages.urllib3.disable_warnings()
+            except (ImportError, AttributeError):
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         # Set auth_type based on what's been provided
         if username is not None:
