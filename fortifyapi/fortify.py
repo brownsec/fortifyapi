@@ -143,10 +143,10 @@ class FortifyApi(object):
         :param description: Description of project version
         :return: A response object containing the created project version
         """
-        issue_template = self.get_issue_template(project_template_id=project_template)
-        issue_template_id = issue_template.data['data'][0]['_href']
-        # SSC API returns the full url for the issue template, strip away just the ID
-        issue_template_id = issue_template_id.rsplit('/', 1)[1]
+        # TODO Check for existence of project template
+
+        issue_template = self.get_issue_template_id(project_template_name=project_template)
+        issue_template_id = issue_template.data['data'][0]['id']
         data = json.dumps(self.__formatted_application_version_payload__(project_name=project_name,
                                                                          project_id=project_id,
                                                                          version_name=version_name,
@@ -158,19 +158,19 @@ class FortifyApi(object):
     def create_new_project_version(self, project_name, project_template, version_name, description):
         """
         :param project_name: Project name
-        :param project_template: Project template
+        :param project_template: Project template name
         :param version_name: Version name
         :param description: Description of project version
         :return: A response object containing the newly created project and project version
         """
-        issue_template = self.get_issue_template(project_template_id=project_template)
-        issue_template_id = issue_template.data['data'][0]['_href']
-        # SSC API returns the full url for the issue template, strip away just the ID
-        issue_template_id = issue_template_id.rsplit('/', 1)[1]
+        # TODO Check for existence of project template
+
+        issue_template = self.get_issue_template_id(project_template_name=project_template)
+        issue_template_id = issue_template.data['data'][0]['id']
         data = json.dumps(self.__formatted_new_application_version_payload__(project_name=project_name,
-                                                                         version_name=version_name,
-                                                                         issue_template_id=issue_template_id,
-                                                                         description=description))
+                                                                             version_name=version_name,
+                                                                             issue_template_id=issue_template_id,
+                                                                             description=description))
         url = '/ssc/api/v1/projectVersions'
         return self._request('POST', url, data=data)
 
@@ -323,7 +323,16 @@ class FortifyApi(object):
         :return: A response object with data containing issue templates for the supplied project name
         """
 
-        url = "/ssc/api/v1/issueTemplates" + "?limit=1&fields=q=id:\"" + project_template_id + "\""
+        url = "/ssc/api/v1/issueTemplates" + "?limit=1&q=id:\"" + project_template_id + "\""
+        return self._request('GET', url)
+
+    def get_issue_template_id(self, project_template_name):
+        """
+        :param project_template_name: name of project template
+        :return: A response object with data containing issue templates for the supplied project name
+        """
+
+        url = "/ssc/api/v1/issueTemplates" + "?limit=1&fields=id&q=name:\"" + project_template_name + "\""
         return self._request('GET', url)
 
     def get_project_version_artifacts(self, parent_id):
@@ -342,12 +351,20 @@ class FortifyApi(object):
         url = '/ssc/api/v1/projectVersions/' + str(project_version_id) + '/attributes/?start=-1&limit=-1'
         return self._request('GET', url)
 
-    def get_project_versions(self):
+    def get_all_project_versions(self):
         """
         :return: A response object with data containing project versions
         """
 
         url = "/ssc/api/v1/projectVersions?start=-1&limit=-1"
+        return self._request('GET', url)
+
+    def get_project_versions(self, project_name):
+        """
+        :return: A response object with data containing project versions
+        """
+
+        url = "/ssc/api/v1/projectVersions?limit=0&q=project.name:\"" + project_name + "\""
         return self._request('GET', url)
 
     def get_projects(self):
