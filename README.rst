@@ -45,4 +45,4 @@ Copyright and License
 ~~~~~~~~~~~~~~~~~~~~~
 .. image:: https://img.shields.io/github/license/target/fortifyapi.svg?style=flat-square
 
-- Copyright 2017 Target Brands, Inc.
+- Copyright 2018 Target Brands, Inc.
