@@ -14,7 +14,7 @@ Quick Start
 
 Several quick start options are available:
 
-- Build locally: ``python setup.py build``
+- Build locally: ``pip install wheel setuptools && python setup.py build`` 
 - Install with pip (recommended): ``pip install fortifyapi``
 - `Download the latest release <https://github.com/target/fortifyapi/releases/latest/>`__.
 
