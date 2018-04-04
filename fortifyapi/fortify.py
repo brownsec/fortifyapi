@@ -108,19 +108,19 @@ class FortifyApi(object):
         return json_application_version
 
     def _bulk_format_new_application_version_payload(self, version_id, development_phase, development_strategy,
-                                                     accessibility, business_risk_ranking):
+                                                     accessibility, business_risk_ranking, custom_attribute):
         json_application_version = dict(requests=[
-            self._bulk_format_one(version_id, development_phase, development_strategy, accessibility,
-                                  business_risk_ranking),
-            self._bulk_format_two(version_id),
-            self._bulk_format_three(version_id),
-            self._bulk_format_four(version_id),
-            self._bulk_format_five(version_id)
+            self._bulk_create_attributes(version_id, development_phase, development_strategy, accessibility,
+                                         business_risk_ranking, custom_attribute),
+            self._bulk_create_responsibilities(version_id),
+            self._bulk_create_configurations(version_id),
+            self._bulk_create_commit(version_id),
+            self._bulk_create_version(version_id)
         ])
         return json.dumps(json_application_version)
 
-    def _bulk_format_one(self, version_id, development_phase, development_strategy, accessibility,
-                         business_risk_ranking):
+    def _bulk_create_attributes(self, version_id, development_phase, development_strategy,
+                                accessibility, business_risk_ranking, custom_attribute):
         if business_risk_ranking is None:
             business_risk_ranking = 'High'
         json_application_version = dict(
@@ -132,9 +132,14 @@ class FortifyApi(object):
                 self._bulk_format_attribute_definition('7', accessibility),
                 self._bulk_format_attribute_definition('1', business_risk_ranking),
             ])
+
+        if custom_attribute[0] is not '' and custom_attribute[1] is not '':
+            json_application_version['postData'].append(
+                self._bulk_format_attribute_definition(custom_attribute[0], custom_attribute[1]))
+
         return json_application_version
 
-    def _bulk_format_two(self, version_id):
+    def _bulk_create_responsibilities(self, version_id):
         json_application_version = dict(
             uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/responsibilities',
             httpVerb='PUT',
@@ -149,7 +154,7 @@ class FortifyApi(object):
                                                 ]
         return json_application_version
 
-    def _bulk_format_three(self, version_id):
+    def _bulk_create_configurations(self, version_id):
         json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/action',
                                         httpVerb='POST',
                                         postData=[dict(
@@ -166,7 +171,7 @@ class FortifyApi(object):
                                         )
         return json_application_version
 
-    def _bulk_format_four(self, version_id):
+    def _bulk_create_commit(self, version_id):
         json_application_version = dict(
             uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '?hideProgress=true',
             httpVerb='PUT',
@@ -176,7 +181,7 @@ class FortifyApi(object):
         )
         return json_application_version
 
-    def _bulk_format_five(self, version_id):
+    def _bulk_create_version(self, version_id):
         json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/action',
                                         httpVerb='POST',
                                         postData=[dict(
@@ -267,7 +272,7 @@ class FortifyApi(object):
         return self._request('POST', url, data=data)
 
     def bulk_create_new_application_request(self, version_id, development_phase, development_strategy, accessibility,
-                                            business_risk_ranking):
+                                            business_risk_ranking, custom_attribute=('', '')):
         """
         Creates a new Application Version by using the Bulk Request API. 'create_new_project_version' must be used
         before calling this method. 
@@ -276,17 +281,18 @@ class FortifyApi(object):
         :param development_strategy: Development Strategy GUID of Version
         :param accessibility: Accessibility GUID of Version
         :param business_risk_ranking: Business Risk Rank GUID of Version
+        :param custom_attribute: Custom Attribute tuple that consists of attributeDefinitionId & Value. Default is a
+                                 empty string tuple.
         :return: A response object containing the newly created project and project version
         """
         data = self._bulk_format_new_application_version_payload(version_id=version_id,
                                                                  development_phase=development_phase,
                                                                  development_strategy=development_strategy,
                                                                  accessibility=accessibility,
-                                                                 business_risk_ranking=business_risk_ranking)
+                                                                 business_risk_ranking=business_risk_ranking,
+                                                                 custom_attribute=custom_attribute)
         url = '/ssc/api/v1/bulk'
         return self._request('POST', url, data=data)
-
-        pass
 
     def download_artifact(self, artifact_id):
         """
