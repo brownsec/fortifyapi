@@ -75,28 +75,124 @@ class FortifyApi(object):
         return json_application_version
 
     @staticmethod
-    def __formatted_new_application_version_payload__(project_name, version_name, issue_template_id,
-                                                  description):
+    def _formatted_new_application_version_payload(application_name, version_name, issue_template_id,
+                                                   version_description, application_description):
         """
-        :param project_name: Project name
+        :param application_name: Project name
         :param version_name: Version name
         :param issue_template_id: Issue template ID
-        :param description: Project version description
-        :return:
+        :param version_description: Project version description
+        :param application_description: Project version description
+        :return: json dump for the new Application Version
         """
-        json_application_version = dict(name='', description='', active=True, committed=True, issueTemplateId='',
+        json_application_version = dict(name=version_name,
+                                        description=version_description,
+                                        active=True,
+                                        committed=False,
                                         project={
-                                            'name': '',
-                                            'description': '',
-                                            'issueTemplateId': ''
-                                        })
+                                            'name': application_name,
+                                            'description': application_description,
+                                            'issueTemplateId': issue_template_id
+                                        },
+                                        issueTemplateId=issue_template_id, )
 
-        json_application_version['project']['issueTemplateId'] = issue_template_id
-        json_application_version['project']['name'] = project_name
-        json_application_version['issueTemplateId'] = issue_template_id
-        json_application_version['name'] = version_name
-        json_application_version['description'] = description
+        return json.dumps(json_application_version)
 
+    @staticmethod
+    def _bulk_format_attribute_definition(attribute_definition_id_value, guid_value):
+        json_application_version = dict(attributeDefinitionId=attribute_definition_id_value,
+                                        values=[],
+                                        value='null')
+        if guid_value is not None:
+            json_application_version['values'] = [dict(guid=guid_value)]
+        return json_application_version
+
+    def _bulk_format_new_application_version_payload(self, version_id, development_phase, development_strategy,
+                                                     accessibility, business_risk_ranking, custom_attribute):
+        json_application_version = dict(requests=[
+            self._bulk_create_attributes(version_id, development_phase, development_strategy, accessibility,
+                                         business_risk_ranking, custom_attribute),
+            self._bulk_create_responsibilities(version_id),
+            self._bulk_create_configurations(version_id),
+            self._bulk_create_commit(version_id),
+            self._bulk_create_version(version_id)
+        ])
+        return json.dumps(json_application_version)
+
+    def _bulk_create_attributes(self, version_id, development_phase, development_strategy,
+                                accessibility, business_risk_ranking, custom_attribute):
+        if business_risk_ranking is None:
+            business_risk_ranking = 'High'
+        json_application_version = dict(
+            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/attributes',
+            httpVerb='PUT',
+            postData=[
+                self._bulk_format_attribute_definition('5', development_phase),
+                self._bulk_format_attribute_definition('6', development_strategy),
+                self._bulk_format_attribute_definition('7', accessibility),
+                self._bulk_format_attribute_definition('1', business_risk_ranking),
+            ])
+
+        if custom_attribute[0] is not '' and custom_attribute[1] is not '':
+            json_application_version['postData'].append(
+                self._bulk_format_attribute_definition(custom_attribute[0], custom_attribute[1]))
+
+        return json_application_version
+
+    def _bulk_create_responsibilities(self, version_id):
+        json_application_version = dict(
+            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/responsibilities',
+            httpVerb='PUT',
+            postData=[]
+        )
+        json_application_version['postData'] = [dict(responsibilityGuid='projectmanager',
+                                                     userId='null'),
+                                                dict(responsibilityGuid='securitychampion',
+                                                     userId='null'),
+                                                dict(responsibilityGuid='developmentmanager',
+                                                     userId='null'),
+                                                ]
+        return json_application_version
+
+    def _bulk_create_configurations(self, version_id):
+        json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/action',
+                                        httpVerb='POST',
+                                        postData=[dict(
+                                            type='COPY_FROM_PARTIAL',
+                                            values={
+                                                "projectVersionId": str(version_id),
+                                                "previousProjectVersionId": '-1',
+                                                "copyAnalysisProcessingRules": 'true',
+                                                "copyBugTrackerConfiguration": 'true',
+                                                "copyCurrentStateFpr": 'false',
+                                                "copyCustomTags": 'true'
+                                            }
+                                        )]
+                                        )
+        return json_application_version
+
+    def _bulk_create_commit(self, version_id):
+        json_application_version = dict(
+            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '?hideProgress=true',
+            httpVerb='PUT',
+            postData={
+                "committed": 'true'
+            }
+        )
+        return json_application_version
+
+    def _bulk_create_version(self, version_id):
+        json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/action',
+                                        httpVerb='POST',
+                                        postData=[dict(
+                                            type='COPY_CURRENT_STATE',
+                                            values={
+                                                "projectVersionId": str(version_id),
+                                                "previousProjectVersionId": '-1',
+                                                "copyCurrentStateFpr": 'false'
+                                            }
+                                        )]
+                                        )
         return json_application_version
 
     def add_project_version_attribute(self, project_version_id, attribute_definition_id, value,
@@ -155,23 +251,47 @@ class FortifyApi(object):
         url = '/ssc/api/v1/projectVersions'
         return self._request('POST', url, data=data)
 
-    def create_new_project_version(self, project_name, project_template, version_name, description):
+    def create_new_project_version(self, application_name, version_name, application_template, description):
         """
-        :param project_name: Project name
-        :param project_template: Project template name
+        :param application_name: Application name
+        :param application_template: Application template name
         :param version_name: Version name
         :param description: Description of project version
         :return: A response object containing the newly created project and project version
         """
-        # TODO Check for existence of project template
 
-        issue_template = self.get_issue_template_id(project_template_name=project_template)
-        issue_template_id = issue_template.data['data'][0]['id']
-        data = json.dumps(self.__formatted_new_application_version_payload__(project_name=project_name,
-                                                                             version_name=version_name,
-                                                                             issue_template_id=issue_template_id,
-                                                                             description=description))
+        issue_template_response = self.get_issue_template_id(project_template_name=application_template)
+        issue_template_id = issue_template_response.data['data'][0]['id']
+
+        data = self._formatted_new_application_version_payload(application_name=application_name,
+                                                               version_name=version_name,
+                                                               issue_template_id=issue_template_id,
+                                                               version_description=description,
+                                                               application_description=description)
         url = '/ssc/api/v1/projectVersions'
+        return self._request('POST', url, data=data)
+
+    def bulk_create_new_application_request(self, version_id, development_phase, development_strategy, accessibility,
+                                            business_risk_ranking, custom_attribute=('', '')):
+        """
+        Creates a new Application Version by using the Bulk Request API. 'create_new_project_version' must be used
+        before calling this method. 
+        :param version_id: Version ID
+        :param development_phase: Development Phase GUID of Version
+        :param development_strategy: Development Strategy GUID of Version
+        :param accessibility: Accessibility GUID of Version
+        :param business_risk_ranking: Business Risk Rank GUID of Version
+        :param custom_attribute: Custom Attribute tuple that consists of attributeDefinitionId & Value. Default is a
+                                 empty string tuple.
+        :return: A response object containing the newly created project and project version
+        """
+        data = self._bulk_format_new_application_version_payload(version_id=version_id,
+                                                                 development_phase=development_phase,
+                                                                 development_strategy=development_strategy,
+                                                                 accessibility=accessibility,
+                                                                 business_risk_ranking=business_risk_ranking,
+                                                                 custom_attribute=custom_attribute)
+        url = '/ssc/api/v1/bulk'
         return self._request('POST', url, data=data)
 
     def download_artifact(self, artifact_id):
@@ -355,7 +475,6 @@ class FortifyApi(object):
         """
         :return: A response object with data containing project versions
         """
-
         url = "/ssc/api/v1/projectVersions?start=-1&limit=-1"
         return self._request('GET', url)
 
