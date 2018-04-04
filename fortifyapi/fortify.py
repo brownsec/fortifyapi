@@ -104,8 +104,8 @@ class FortifyApi(object):
                                         values=[],
                                         value='null')
         if guid_value is not None:
-            json_application_version['values'] = [json.dump(dict(guid=guid_value))]
-        return json.dumps(json_application_version)
+            json_application_version['values'] = [dict(guid=guid_value)]
+        return json_application_version
 
     def _bulk_format_new_application_version_payload(self, version_id, development_phase, development_strategy,
                                                      accessibility, business_risk_ranking):
@@ -123,72 +123,72 @@ class FortifyApi(object):
                          business_risk_ranking):
         if business_risk_ranking is None:
             business_risk_ranking = 'High'
-        json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + version_id + '/attributes',
-                                        httpVerb='PUT',
-                                        postData=[
-                                            self._bulk_format_attribute_definition(5, development_phase),
-                                            self._bulk_format_attribute_definition(6, development_strategy),
-                                            self._bulk_format_attribute_definition(7, accessibility),
-                                            self._bulk_format_attribute_definition(1, business_risk_ranking),
-                                        ]
-                                        )
-        return json.dumps(json_application_version)
+        json_application_version = dict(
+            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/attributes',
+            httpVerb='PUT',
+            postData=[
+                self._bulk_format_attribute_definition('5', development_phase),
+                self._bulk_format_attribute_definition('6', development_strategy),
+                self._bulk_format_attribute_definition('7', accessibility),
+                self._bulk_format_attribute_definition('1', business_risk_ranking),
+            ])
+        return json_application_version
 
     def _bulk_format_two(self, version_id):
         json_application_version = dict(
-            uri=self.host + '/ssc/api/v1/projectVersions/' + version_id + '/responsibilities',
+            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/responsibilities',
             httpVerb='PUT',
             postData=[]
         )
-        json_application_version['postData'] = [json.dump(dict(responsibilityGuid='projectmanager',
-                                                               userId='null')),
-                                                json.dump(dict(responsibilityGuid='securitychampion',
-                                                               userId='null')),
-                                                json.dump(dict(responsibilityGuid='developmentmanager',
-                                                               userId='null')),
+        json_application_version['postData'] = [dict(responsibilityGuid='projectmanager',
+                                                     userId='null'),
+                                                dict(responsibilityGuid='securitychampion',
+                                                     userId='null'),
+                                                dict(responsibilityGuid='developmentmanager',
+                                                     userId='null'),
                                                 ]
-        return json.dumps(json_application_version)
+        return json_application_version
 
     def _bulk_format_three(self, version_id):
-        json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + version_id + '/action',
+        json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/action',
                                         httpVerb='POST',
-                                        postData=[json.dump(dict(
+                                        postData=[dict(
                                             type='COPY_FROM_PARTIAL',
                                             values={
-                                                "projectVersionId": version_id,
-                                                "previousProjectVersionId": -1,
+                                                "projectVersionId": str(version_id),
+                                                "previousProjectVersionId": '-1',
                                                 "copyAnalysisProcessingRules": 'true',
                                                 "copyBugTrackerConfiguration": 'true',
                                                 "copyCurrentStateFpr": 'false',
                                                 "copyCustomTags": 'true'
                                             }
-                                        ))]
+                                        )]
                                         )
-        return json.dumps(json_application_version)
+        return json_application_version
 
     def _bulk_format_four(self, version_id):
         json_application_version = dict(
-            uri=self.host + '/ssc/api/v1/projectVersions/' + version_id + '?hideProgress=true',
+            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '?hideProgress=true',
             httpVerb='PUT',
             postData={
                 "committed": 'true'
             }
         )
-        return json.dumps(json_application_version)
+        return json_application_version
 
     def _bulk_format_five(self, version_id):
-        json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + version_id + '/action',
+        json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/action',
                                         httpVerb='POST',
-                                        postData=[json.dump(dict(
+                                        postData=[dict(
                                             type='COPY_CURRENT_STATE',
                                             values={
-                                                "projectVersionId": version_id,
-                                                "previousProjectVersionId": -1,
+                                                "projectVersionId": str(version_id),
+                                                "previousProjectVersionId": '-1',
                                                 "copyCurrentStateFpr": 'false'
                                             }
-                                        ))]
+                                        )]
                                         )
-        return json.dumps(json_application_version)
+        return json_application_version
 
     def add_project_version_attribute(self, project_version_id, attribute_definition_id, value,
                                       values, guid=None):
