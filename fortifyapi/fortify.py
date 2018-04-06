@@ -67,13 +67,14 @@ class FortifyApi(object):
                                                                  business_risk_ranking=business_risk_ranking,
                                                                  custom_attribute=custom_attribute)
         url = '/ssc/api/v1/bulk'
+        print(data)
         return self._request('POST', url, data=data)
 
     @staticmethod
-    def _bulk_format_attribute_definition(attribute_definition_id_value, guid_value):
+    def _bulk_format_attribute_definition(attribute_definition_id_value, guid_value='', value='null'):
         json_application_version = dict(attributeDefinitionId=attribute_definition_id_value,
                                         values=[],
-                                        value='null')
+                                        value=value)
         if guid_value is not None:
             json_application_version['values'] = [dict(guid=guid_value)]
         return json_application_version
@@ -106,7 +107,9 @@ class FortifyApi(object):
 
         if custom_attribute[0] is not '' and custom_attribute[1] is not '':
             json_application_version['postData'].append(
-                self._bulk_format_attribute_definition(custom_attribute[0], custom_attribute[1]))
+
+                self._bulk_format_attribute_definition(attribute_definition_id_value=custom_attribute[0],
+                                                       value=custom_attribute[1]))
 
         return json_application_version
 
@@ -493,15 +496,15 @@ class FortifyApi(object):
             except ValueError as e:
                 return FortifyResponse(success=False, message="JSON response could not be decoded {0}.".format(e))
         except requests.exceptions.SSLError as e:
-            return FortifyResponse(message='An SSL error occurred. {0}'.format(e.message), success=False)
+            return FortifyResponse(message='An SSL error occurred. {0}'.format(e), success=False)
         except requests.exceptions.ConnectionError as e:
-            return FortifyResponse(message='A connection error occurred. {0}'.format(e.message), success=False)
+            return FortifyResponse(message='A connection error occurred. {0}'.format(e), success=False)
         except requests.exceptions.Timeout:
             return FortifyResponse(message='The request timed out after ' + str(self.timeout) + ' seconds.',
                                    success=False)
         except requests.exceptions.RequestException as e:
             return FortifyResponse(
-                message='There was an error while handling the request. {0}'.format(e.message), success=False)
+                message='There was an error while handling the request. {0}'.format(e), success=False)
 
 
 class FortifyTokenAuth(requests.auth.AuthBase):
