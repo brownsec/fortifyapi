@@ -46,57 +46,28 @@ class FortifyApi(object):
         else:
             self.auth_type = 'unauthenticated'
 
-    @staticmethod
-    def __formatted_application_version_payload__(project_name, project_id, version_name, issue_template_id,
-                                                  description):
+    def bulk_create_new_application_version_request(self, version_id, development_phase, development_strategy,
+                                                    accessibility, business_risk_ranking, custom_attribute=('', '')):
         """
-        :param project_name: Project name
-        :param project_id: Project ID
-        :param version_name: Version name
-        :param issue_template_id: Issue template ID
-        :param description: Project version description
-        :return:
+        Creates a new Application Version by using the Bulk Request API. 'create_new_project_version' must be used
+        before calling this method.
+        :param version_id: Version ID
+        :param development_phase: Development Phase GUID of Version
+        :param development_strategy: Development Strategy GUID of Version
+        :param accessibility: Accessibility GUID of Version
+        :param business_risk_ranking: Business Risk Rank GUID of Version
+        :param custom_attribute: Custom Attribute tuple that consists of attributeDefinitionId & Value. Default is a
+                                 empty string tuple.
+        :return: A response object containing the newly created project and project version
         """
-        json_application_version = dict(name='', description='', active=True, committed=True, issueTemplateId='',
-                                        project={
-                                            'name': '',
-                                            'description': '',
-                                            'issueTemplateId': '',
-                                            'id': ''
-                                        })
-
-        json_application_version['project']['issueTemplateId'] = issue_template_id
-        json_application_version['project']['name'] = project_name
-        json_application_version['project']['id'] = project_id
-        json_application_version['issueTemplateId'] = issue_template_id
-        json_application_version['name'] = version_name
-        json_application_version['description'] = description
-
-        return json_application_version
-
-    @staticmethod
-    def _formatted_new_application_version_payload(application_name, version_name, issue_template_id,
-                                                   version_description, application_description):
-        """
-        :param application_name: Project name
-        :param version_name: Version name
-        :param issue_template_id: Issue template ID
-        :param version_description: Project version description
-        :param application_description: Project version description
-        :return: json dump for the new Application Version
-        """
-        json_application_version = dict(name=version_name,
-                                        description=version_description,
-                                        active=True,
-                                        committed=False,
-                                        project={
-                                            'name': application_name,
-                                            'description': application_description,
-                                            'issueTemplateId': issue_template_id
-                                        },
-                                        issueTemplateId=issue_template_id, )
-
-        return json.dumps(json_application_version)
+        data = self._bulk_format_new_application_version_payload(version_id=version_id,
+                                                                 development_phase=development_phase,
+                                                                 development_strategy=development_strategy,
+                                                                 accessibility=accessibility,
+                                                                 business_risk_ranking=business_risk_ranking,
+                                                                 custom_attribute=custom_attribute)
+        url = '/ssc/api/v1/bulk'
+        return self._request('POST', url, data=data)
 
     @staticmethod
     def _bulk_format_attribute_definition(attribute_definition_id_value, guid_value):
@@ -173,7 +144,7 @@ class FortifyApi(object):
 
     def _bulk_create_commit(self, version_id):
         json_application_version = dict(
-            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '?hideProgress=true',
+            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id),
             httpVerb='PUT',
             postData={
                 "committed": 'true'
@@ -195,103 +166,38 @@ class FortifyApi(object):
                                         )
         return json_application_version
 
-    def add_project_version_attribute(self, project_version_id, attribute_definition_id, value,
-                                      values, guid=None):
+    def create_application_version(self, application_name, application_template, version_name, description,
+                                   application_id=None):
         """
-        :param project_version_id: Project version id
-        :param attribute_definition_id: Attribute definition ID
-        :param guid: GUID
-        :param value: Value
-        :param values: Values
-        :return: A response object containing the result of the attribute change
-        """
-        project_version_attribute = dict(attributeDefinitionId="", guid="", value="", values=values)
-
-        project_version_attribute['attributeDefinitionId'] = attribute_definition_id
-        project_version_attribute['guid'] = guid
-        project_version_attribute['value'] = value
-        project_version_attribute['values'] = values
-
-        url = '/ssc/api/v1/projectVersions/' + str(project_version_id) + '/attributes'
-        data = json.dumps(project_version_attribute)
-        return self._request('POST', url, data=data)
-
-    def commit_project_version(self, project_version_id):
-        """
-        Set the commit attribute of the specified project version to true
-        :param project_version_id:
-        :return: A response object containing the result of the attribute change
-        """
-        project_version_attribute = {
-            "committed": True
-        }
-
-        url = '/ssc/api/v1/projectVersions/' + str(project_version_id)
-        data = json.dumps(project_version_attribute)
-        return self._request('PUT', url, data=data)
-
-    def create_project_version(self, project_name, project_id, project_template, version_name, description):
-        """
-        :param project_name: Project name
-        :param project_id: Project ID
-        :param project_template: Project template
-        :param version_name: Version name
-        :param description: Description of project version
-        :return: A response object containing the created project version
-        """
-        # TODO Check for existence of project template
-
-        issue_template = self.get_issue_template_id(project_template_name=project_template)
-        issue_template_id = issue_template.data['data'][0]['id']
-        data = json.dumps(self.__formatted_application_version_payload__(project_name=project_name,
-                                                                         project_id=project_id,
-                                                                         version_name=version_name,
-                                                                         issue_template_id=issue_template_id,
-                                                                         description=description))
-        url = '/ssc/api/v1/projectVersions'
-        return self._request('POST', url, data=data)
-
-    def create_new_project_version(self, application_name, version_name, application_template, description):
-        """
-        :param application_name: Application name
+        :param application_name: Project name
+        :param application_id: Project ID
         :param application_template: Application template name
         :param version_name: Version name
-        :param description: Description of project version
-        :return: A response object containing the newly created project and project version
+        :param description: Application Version description
+        :return: A response object containing the created project version
         """
+        # If no application ID is given, sets JSON value to null.
+        if application_id is None:
+            application_id = 'null'
 
-        issue_template_response = self.get_issue_template_id(project_template_name=application_template)
-        issue_template_id = issue_template_response.data['data'][0]['id']
+        # Gets Template ID
+        issue_template = self.get_issue_template_id(project_template_name=application_template)
+        issue_template_id = issue_template.data['data'][0]['id']
 
-        data = self._formatted_new_application_version_payload(application_name=application_name,
-                                                               version_name=version_name,
-                                                               issue_template_id=issue_template_id,
-                                                               version_description=description,
-                                                               application_description=description)
+        json_application_version = dict(name=version_name,
+                                        description=description,
+                                        active=True,
+                                        committed=False,
+                                        project={
+                                            'name': application_name,
+                                            'description': description,
+                                            'issueTemplateId': issue_template_id,
+                                            'id': application_id
+                                        },
+                                        issueTemplateId=issue_template_id)
+
+        data = json.dumps(json_application_version)
         url = '/ssc/api/v1/projectVersions'
-        return self._request('POST', url, data=data)
-
-    def bulk_create_new_application_request(self, version_id, development_phase, development_strategy, accessibility,
-                                            business_risk_ranking, custom_attribute=('', '')):
-        """
-        Creates a new Application Version by using the Bulk Request API. 'create_new_project_version' must be used
-        before calling this method. 
-        :param version_id: Version ID
-        :param development_phase: Development Phase GUID of Version
-        :param development_strategy: Development Strategy GUID of Version
-        :param accessibility: Accessibility GUID of Version
-        :param business_risk_ranking: Business Risk Rank GUID of Version
-        :param custom_attribute: Custom Attribute tuple that consists of attributeDefinitionId & Value. Default is a
-                                 empty string tuple.
-        :return: A response object containing the newly created project and project version
-        """
-        data = self._bulk_format_new_application_version_payload(version_id=version_id,
-                                                                 development_phase=development_phase,
-                                                                 development_strategy=development_strategy,
-                                                                 accessibility=accessibility,
-                                                                 business_risk_ranking=business_risk_ranking,
-                                                                 custom_attribute=custom_attribute)
-        url = '/ssc/api/v1/bulk'
         return self._request('POST', url, data=data)
 
     def download_artifact(self, artifact_id):
@@ -378,16 +284,11 @@ class FortifyApi(object):
 
     def get_attribute_definition(self, search_expression):
         """
-        :param search_expression: A fortify-formatted search expression, e.g. name:"Development Phase"
-        :return: A response object containing the result of the get
+        :param search_expression: A fortify-formatted search expression, e.g. Development Phase
+        :return: A response object containing the result of the GET
         """
         if search_expression:
-            try:
-                # Python 2
-                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.quote(str(search_expression))
-            except:
-                # Python 3
-                url = '/ssc/api/v1/attributeDefinitions?q=' + urllib.parse.quote(str(search_expression))
+            url = '/ssc/api/v1/attributeDefinitions?q=name:"' + search_expression + '"'
             return self._request('GET', url)
         else:
             return FortifyResponse(message='A search expression must be provided', success=False)
@@ -494,20 +395,18 @@ class FortifyApi(object):
         url = "/ssc/api/v1/projects?start=-1&limit=-1"
         return self._request('GET', url)
 
-    def get_token(self, token_type=None, ttl=None):
+    def get_token(self):
         """
-        :param token_type: token type to get
-        :param ttl: ttl for the token
         :return: A response object with data containing create date, terminal date, and the actual token
         """
 
-        url = '/ssc/api/v1/auth/token?'
-        if token_type is not None:
-            url = url + 'token=' + str(token_type) + '&'
-        if ttl is not None:
-            url = url + 'ttl=' + str(ttl)
+        data = {
+            "type": "UnifiedLoginToken"
+        }
 
-        return self._request('GET', url)
+        data = json.dumps(data)
+        url = '/ssc/api/v1/tokens'
+        return self._request('POST', url, data=data)
 
     def post_attribute_definition(self, attribute_definition):
         """
@@ -525,9 +424,9 @@ class FortifyApi(object):
         :return: Response from the file upload operation
         """
         upload = self.get_file_token('UPLOAD')
-        if upload == None or upload['data'] == None:
-          return FortifyResponse(message='Failed to get the SSC upload file token', success=False)
-          
+        if upload is None or upload.data['data'] is None:
+            return FortifyResponse(message='Failed to get the SSC upload file token', success=False)
+
         file_token = upload.data['data']['token']
         url = "/ssc/upload/resultFileUpload.html?mat=" + file_token
         files = {'file': (ntpath.basename(file_path), open(file_path, 'rb'))}
@@ -545,9 +444,7 @@ class FortifyApi(object):
             'Filename': ntpath.basename(file_path)
         }
 
-        response = self._request('POST', url, params, files=files, stream=True, headers=headers)
-
-        return response
+        return self._request('POST', url, params, files=files, stream=True, headers=headers)
 
     def _request(self, method, url, params=None, files=None, data=None, headers=None, stream=False):
         """Common handler for all HTTP requests."""
