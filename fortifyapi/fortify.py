@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 
 __author__ = "Brandon Spruth (brandon.spruth2@target.com), Jim Nelson (jim.nelson2@target.com)"
-__copyright__ = "(C) 2017 Target Brands, Inc."
+__copyright__ = "(C) 2018 Target Brands, Inc."
 __contributors__ = ["Brandon Spruth", "Jim Nelson", "Matthew Dunaj"]
 __status__ = "Production"
 __license__ = "MIT"
 
-import urllib
 import urllib3
 import json
 import ntpath
@@ -20,7 +19,7 @@ from . import __version__ as version
 
 class FortifyApi(object):
     def __init__(self, host, username=None, password=None, token=None, verify_ssl=True, timeout=60, user_agent=None,
-                 client_version='17.10.0158'):
+                 client_version='17.20.0158'):
 
         self.host = host
         self.username = username
@@ -66,7 +65,8 @@ class FortifyApi(object):
                                                                  accessibility=accessibility,
                                                                  business_risk_ranking=business_risk_ranking,
                                                                  custom_attribute=custom_attribute)
-        url = '/ssc/api/v1/bulk'
+        url = '/api/v1/bulk'
+        print(data)
         return self._request('POST', url, data=data)
 
     @staticmethod
@@ -95,7 +95,7 @@ class FortifyApi(object):
         if business_risk_ranking is None:
             business_risk_ranking = 'High'
         json_application_version = dict(
-            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/attributes',
+            uri=self.host + '/api/v1/projectVersions/' + str(version_id) + '/attributes',
             httpVerb='PUT',
             postData=[
                 self._bulk_format_attribute_definition('5', development_phase),
@@ -114,7 +114,7 @@ class FortifyApi(object):
 
     def _bulk_create_responsibilities(self, version_id):
         json_application_version = dict(
-            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/responsibilities',
+            uri=self.host + '/api/v1/projectVersions/' + str(version_id) + '/responsibilities',
             httpVerb='PUT',
             postData=[]
         )
@@ -128,7 +128,7 @@ class FortifyApi(object):
         return json_application_version
 
     def _bulk_create_configurations(self, version_id):
-        json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/action',
+        json_application_version = dict(uri=self.host + '/api/v1/projectVersions/' + str(version_id) + '/action',
                                         httpVerb='POST',
                                         postData=[dict(
                                             type='COPY_FROM_PARTIAL',
@@ -146,7 +146,7 @@ class FortifyApi(object):
 
     def _bulk_create_commit(self, version_id):
         json_application_version = dict(
-            uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id),
+            uri=self.host + '/api/v1/projectVersions/' + str(version_id),
             httpVerb='PUT',
             postData={
                 "committed": 'true'
@@ -155,7 +155,7 @@ class FortifyApi(object):
         return json_application_version
 
     def _bulk_create_version(self, version_id):
-        json_application_version = dict(uri=self.host + '/ssc/api/v1/projectVersions/' + str(version_id) + '/action',
+        json_application_version = dict(uri=self.host + '/api/v1/projectVersions/' + str(version_id) + '/action',
                                         httpVerb='POST',
                                         postData=[dict(
                                             type='COPY_CURRENT_STATE',
@@ -199,7 +199,7 @@ class FortifyApi(object):
                                         issueTemplateId=issue_template_id)
 
         data = json.dumps(json_application_version)
-        url = '/ssc/api/v1/projectVersions'
+        url = '/api/v1/projectVersions'
         return self._request('POST', url, data=data)
 
     def download_artifact(self, artifact_id):
@@ -221,7 +221,7 @@ class FortifyApi(object):
         """
         file_token = self.get_file_token('DOWNLOAD').data['data']['token']
 
-        url = "/ssc/download/artifactDownload.html?mat=" + file_token + "&id=" + str(
+        url = "/download/artifactDownload.html?mat=" + file_token + "&id=" + str(
             artifact_id) + "&clientVersion=" + self.client_version
 
         headers = {
@@ -258,7 +258,7 @@ class FortifyApi(object):
         """
         file_token = self.get_file_token('DOWNLOAD').data['data']['token']
 
-        url = "/ssc/download/currentStateFprDownload.html?mat=" + file_token + "&id=" + str(
+        url = "/download/currentStateFprDownload.html?mat=" + file_token + "&id=" + str(
             artifact_id) + "&clientVersion=" + self.client_version + "&includeSource=true"
 
         headers = {
@@ -281,7 +281,7 @@ class FortifyApi(object):
         :param parent_id: parent resource identifier
         :return: A response object containing artifact scans
         """
-        url = "/ssc/api/v1/artifacts/" + str(parent_id) + "/scans"
+        url = "/api/v1/artifacts/" + str(parent_id) + "/scans"
         return self._request('GET', url)
 
     def get_attribute_definition(self, search_expression):
@@ -290,7 +290,7 @@ class FortifyApi(object):
         :return: A response object containing the result of the GET
         """
         if search_expression:
-            url = '/ssc/api/v1/attributeDefinitions?q=name:"' + search_expression + '"'
+            url = '/api/v1/attributeDefinitions?q=name:"' + search_expression + '"'
             return self._request('GET', url)
         else:
             return FortifyResponse(message='A search expression must be provided', success=False)
@@ -299,21 +299,21 @@ class FortifyApi(object):
         """
         :return: A response object containing all attribute definitions
         """
-        url = '/ssc/api/v1/attributeDefinitions?start=-1&limit=-1'
+        url = '/api/v1/attributeDefinitions?start=-1&limit=-1'
         return self._request('GET', url)
 
     def get_cloudscan_jobs(self):
         """
         :return: A response object containing all cloudscan jobs
         """
-        url = '/ssc/api/v1/cloudjobs?start=-1&limit=-1'
+        url = '/api/v1/cloudjobs?start=-1&limit=-1'
         return self._request('GET', url)
 
     def get_cloudscan_job_status(self, scan_id):
         """
         :return: A response object containing a cloudscan job
         """
-        url = '/ssc/api/v1/cloudjobs/' + scan_id
+        url = '/api/v1/cloudjobs/' + scan_id
         return self._request('GET', url)
 
     def get_file_token(self, purpose):
@@ -322,7 +322,7 @@ class FortifyApi(object):
         :return: a response body containing a file token for the specified purpose
         """
 
-        url = "/ssc/api/v1/fileTokens"
+        url = "/api/v1/fileTokens"
         if purpose == 'UPLOAD':
             data = json.dumps(
                 {
@@ -346,7 +346,7 @@ class FortifyApi(object):
         :return: A response object with data containing issue templates for the supplied project name
         """
 
-        url = "/ssc/api/v1/issueTemplates" + "?limit=1&q=id:\"" + project_template_id + "\""
+        url = "/api/v1/issueTemplates" + "?limit=1&q=id:\"" + project_template_id + "\""
         return self._request('GET', url)
 
     def get_issue_template_id(self, project_template_name):
@@ -355,7 +355,7 @@ class FortifyApi(object):
         :return: A response object with data containing issue templates for the supplied project name
         """
 
-        url = "/ssc/api/v1/issueTemplates" + "?limit=1&fields=id&q=name:\"" + project_template_name + "\""
+        url = "/api/v1/issueTemplates" + "?limit=1&fields=id&q=name:\"" + project_template_name + "\""
         return self._request('GET', url)
 
     def get_project_version_artifacts(self, parent_id):
@@ -363,7 +363,7 @@ class FortifyApi(object):
         :param parent_id: parent resource identifier
         :return: A response object containing project version artifacts
         """
-        url = "/ssc/api/v1/projectVersions/" + str(parent_id) + "/artifacts?start=-1&limit=-1"
+        url = "/api/v1/projectVersions/" + str(parent_id) + "/artifacts?start=-1&limit=-1"
         return self._request('GET', url)
 
     def get_project_version_attributes(self, project_version_id):
@@ -371,14 +371,14 @@ class FortifyApi(object):
         :param project_version_id: Project version id
         :return: A response object containing the project version attributes
         """
-        url = '/ssc/api/v1/projectVersions/' + str(project_version_id) + '/attributes/?start=-1&limit=-1'
+        url = '/api/v1/projectVersions/' + str(project_version_id) + '/attributes/?start=-1&limit=-1'
         return self._request('GET', url)
 
     def get_all_project_versions(self):
         """
         :return: A response object with data containing project versions
         """
-        url = "/ssc/api/v1/projectVersions?start=-1&limit=-1"
+        url = "/api/v1/projectVersions?start=-1&limit=-1"
         return self._request('GET', url)
 
     def get_project_versions(self, project_name):
@@ -386,7 +386,7 @@ class FortifyApi(object):
         :return: A response object with data containing project versions
         """
 
-        url = "/ssc/api/v1/projectVersions?limit=0&q=project.name:\"" + project_name + "\""
+        url = "/api/v1/projectVersions?limit=0&q=project.name:\"" + project_name + "\""
         return self._request('GET', url)
 
     def get_projects(self):
@@ -394,7 +394,7 @@ class FortifyApi(object):
         :return: A response object with data containing projects
         """
 
-        url = "/ssc/api/v1/projects?start=-1&limit=-1"
+        url = "/api/v1/projects?start=-1&limit=-1"
         return self._request('GET', url)
 
     def get_token(self):
@@ -407,7 +407,7 @@ class FortifyApi(object):
         }
 
         data = json.dumps(data)
-        url = '/ssc/api/v1/tokens'
+        url = '/api/v1/tokens'
         return self._request('POST', url, data=data)
 
     def post_attribute_definition(self, attribute_definition):
@@ -415,7 +415,7 @@ class FortifyApi(object):
         :param attribute_definition:
         :return:
         """
-        url = '/ssc/api/v1/attributeDefinitions'
+        url = '/api/v1/attributeDefinitions'
         data = json.dumps(attribute_definition)
         return self._request('POST', url, data=data)
 
@@ -430,7 +430,7 @@ class FortifyApi(object):
             return FortifyResponse(message='Failed to get the SSC upload file token', success=False)
 
         file_token = upload.data['data']['token']
-        url = "/ssc/upload/resultFileUpload.html?mat=" + file_token
+        url = "/upload/resultFileUpload.html?mat=" + file_token
         files = {'file': (ntpath.basename(file_path), open(file_path, 'rb'))}
 
         headers = {
