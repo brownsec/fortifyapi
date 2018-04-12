@@ -66,7 +66,6 @@ class FortifyApi(object):
                                                                  business_risk_ranking=business_risk_ranking,
                                                                  custom_attribute=custom_attribute)
         url = '/api/v1/bulk'
-        print(data)
         return self._request('POST', url, data=data)
 
     @staticmethod
